@@ -425,7 +425,7 @@ function applyImportedTextures(items) {
    АВТОЗАГРУЗКА
    ============================================================ */
 async function tryAutoLoadRPZip() {
-  const paths = ['RP/RP.zip', 'RP/rp.zip', 'RP/ResourcePack.zip'];
+  const paths = ['RP/RP.zip', 'RP/rp.zip', 'RP/Напишите имя своего ресурс-пака ).zip'];
   if (location.protocol === 'file:') return false;
   for (const path of paths) {
     try {
