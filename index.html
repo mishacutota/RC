@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RP Studio — Редактор ресурс-паков 1.8.9</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="drop-overlay" id="drop-overlay">
+  <div class="drop-box">
+    <div class="ico">📦</div>
+    <h2>Отпусти папку или .zip</h2>
+    <p>Папка с <b>assets/minecraft/textures/</b> или готовый <b>RP.zip</b></p>
+  </div>
+</div>
+
+<!-- ============ HOME SCREEN ============ -->
+<section id="home-screen" class="screen active">
+  <div class="bg-glow"></div>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <div class="home-container">
+    <header class="home-header">
+      <div class="logo">
+        <div class="logo-cube"></div>
+        <div>
+          <h1>RP Studio</h1>
+          <p>Редактор ресурс-паков · Minecraft <span class="tag">1.8.9</span></p>
+        </div>
+      </div>
+    </header>
+
+    <div class="home-grid">
+      <div class="panel">
+        <h2>Название пакета</h2>
+        <div class="field">
+          <input id="pack-name" type="text" value="My Resource Pack" maxlength="64">
+          <div class="preview mc-render" id="name-preview"></div>
+          <div class="mc-colors" id="name-mc-colors"></div>
+        </div>
+
+        <h2 style="margin-top:20px">Описание</h2>
+        <div class="field">
+          <textarea id="pack-desc" rows="2" maxlength="200" placeholder="Крутой ресурс-пак §aот меня"></textarea>
+          <div class="preview mc-render" id="desc-preview"></div>
+          <div class="mc-colors" id="desc-mc-colors"></div>
+        </div>
+
+        <div class="field" style="margin-top:16px">
+          <label>Версия Minecraft</label>
+          <select id="pack-version">
+            <option value="1.8.9">1.8.9</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Иконка пакета</h2>
+        <div class="icon-drop" id="icon-drop">
+          <img id="icon-preview" alt="">
+          <div class="icon-hint">
+            <strong>Нажми или перетащи PNG</strong>
+            <small>Рекомендуется 128×128</small>
+          </div>
+        </div>
+        <input type="file" id="icon-input" accept="image/png" hidden>
+      </div>
+    </div>
+
+    <div id="load-status" class="load-status" hidden></div>
+
+    <div class="home-actions">
+      <button class="btn btn-ghost" id="btn-templates">🎨 Выбрать шаблон</button>
+      <button class="btn btn-ghost" id="btn-import-zip">📦 Импорт .zip</button>
+      <button class="btn btn-primary" id="btn-create">Открыть редактор →</button>
+    </div>
+
+    <input type="file" id="folder-input" webkitdirectory directory multiple hidden>
+    <input type="file" id="zip-input" accept=".zip" hidden>
+  </div>
+</section>
+
+<!-- ============ EDITOR SCREEN ============ -->
+<section id="editor-screen" class="screen">
+  <header class="topbar">
+    <button class="btn btn-ghost" id="btn-back">← Назад</button>
+    <div class="topbar-title mc-render" id="editor-title"></div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" id="btn-add-cat">+ Категория</button>
+      <button class="btn btn-primary" id="btn-export">⬇ Скачать .zip</button>
+    </div>
+  </header>
+
+  <div class="editor-layout">
+    <aside class="sidebar">
+      <div class="sidebar-title">Категории</div>
+      <ul id="categories"></ul>
+    </aside>
+
+    <main class="content">
+      <div class="content-header">
+        <h2 id="cat-title">—</h2>
+        <div class="content-actions">
+          <button class="btn btn-ghost" id="btn-import-textures">📥 Импорт PNG</button>
+          <button class="btn btn-primary" id="btn-new-texture">+ Новая текстура</button>
+        </div>
+      </div>
+      <div class="texture-grid" id="texture-grid"></div>
+      <div class="empty-state" id="empty-state" hidden>
+        <div class="empty-icon">🎨</div>
+        <p>В этой категории пока нет текстур</p>
+        <button class="btn btn-primary" id="btn-empty-new">Создать первую текстуру</button>
+      </div>
+    </main>
+  </div>
+</section>
+
+<!-- ============ NEW TEXTURE MODAL ============ -->
+<div id="newtex-modal" class="modal">
+  <div class="modal-box picker-modal-box">
+    <header class="modal-header">
+      <div class="modal-title-block">
+        <h3>Добавить текстуру</h3>
+        <p class="modal-subtitle">Создать свою или выбрать из библиотеки 1.8.9</p>
+      </div>
+      <button class="modal-x" id="newtex-close">✕</button>
+    </header>
+
+    <div class="picker-tabs" id="newtex-tabs">
+      <button class="picker-tab active" data-tab="create" type="button">
+        <span class="tab-icon">✨</span>
+        <span class="tab-text">
+          <span class="tab-title">Создать свою</span>
+          <span class="tab-sub">Своё имя и размер</span>
+        </span>
+      </button>
+      <button class="picker-tab" data-tab="library" type="button">
+        <span class="tab-icon">📚</span>
+        <span class="tab-text">
+          <span class="tab-title">Библиотека 1.8.9</span>
+          <span class="tab-sub" id="newtex-library-count">Стандартные текстуры</span>
+        </span>
+      </button>
+    </div>
+
+    <div class="picker-panel" id="newtex-panel-create">
+      <div class="mini-field">
+        <label>Имя файла (можно с подпапкой)</label>
+        <input id="newtex-name" type="text" placeholder="stone.png или enderman/enderman.png" spellcheck="false">
+        <div class="mini-hint">Если указать <code>папка/имя.png</code> — создастся вложенная папка</div>
+      </div>
+      <div class="mini-field">
+        <label>Размер (ширина × высота)</label>
+        <div class="size-row">
+          <input id="newtex-w" type="number" min="1" max="512" value="16">
+          <input id="newtex-h" type="number" min="1" max="512" value="16">
+        </div>
+        <div class="mini-hint">16×16 блоки/предметы · 64×64 сущности · 64×32 модельки · 182×22 хотбар · 256×256 GUI</div>
+      </div>
+      <div class="mini-actions">
+        <button class="btn btn-ghost" id="newtex-cancel">Отмена</button>
+        <button class="btn btn-primary" id="newtex-ok">Создать</button>
+      </div>
+    </div>
+
+    <div class="picker-panel" id="newtex-panel-library" hidden>
+      <div class="existing-search-wrap">
+        <span class="search-icon">🔍</span>
+        <input id="newtex-search" type="text" placeholder="Поиск: stone, gold_sword, heart, creeper..." autocomplete="off">
+        <span class="search-count" id="newtex-count">0</span>
+      </div>
+      <div class="lib-cats" id="newtex-lib-cats"></div>
+      <div class="existing-list" id="newtex-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TEMPLATE MODAL ============ -->
+<div id="template-modal" class="modal">
+  <div class="modal-box mini-box" style="max-width:540px">
+    <h3>Выбрать шаблон</h3>
+    <div class="template-list">
+      <button class="template-item" data-tpl="empty">
+        <div class="tpl-icon">📄</div>
+        <div class="tpl-info">
+          <div class="tpl-name">Пустой пакет</div>
+          <div class="tpl-desc">Начать с нуля — добавлять текстуры вручную</div>
+        </div>
+      </button>
+      <button class="template-item" data-tpl="vanilla" id="tpl-vanilla">
+        <div class="tpl-icon">📦</div>
+        <div class="tpl-info">
+          <div class="tpl-name">Vanilla 1.8.9 <span class="tpl-badge" id="tpl-vanilla-badge" hidden>загружен</span></div>
+          <div class="tpl-desc" id="tpl-vanilla-desc">Загрузить RP/RP.zip</div>
+        </div>
+      </button>
+      <button class="template-item" data-tpl="folder">
+        <div class="tpl-icon">📂</div>
+        <div class="tpl-info">
+          <div class="tpl-name">Из папки</div>
+          <div class="tpl-desc">Выбрать папку с ресурс-паком</div>
+        </div>
+      </button>
+      <button class="template-item" data-tpl="zip">
+        <div class="tpl-icon">🗜️</div>
+        <div class="tpl-info">
+          <div class="tpl-name">Из .zip архива</div>
+          <div class="tpl-desc">Импорт готового .zip пакета</div>
+        </div>
+      </button>
+    </div>
+    <div class="mini-actions">
+      <button class="btn btn-ghost" id="tpl-cancel">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TEXT EDITOR MODAL ============ -->
+<div id="text-modal" class="modal">
+  <div class="modal-box text-box">
+    <header class="modal-header">
+      <input id="text-filename" type="text" spellcheck="false">
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="text-cancel">Отмена</button>
+        <button class="btn btn-primary" id="text-save">Сохранить</button>
+      </div>
+    </header>
+    <textarea id="text-content" spellcheck="false" wrap="off"></textarea>
+  </div>
+</div>
+
+<!-- ============ PAINTER MODAL ============ -->
+<div id="painter-modal" class="modal">
+  <div class="modal-box painter-box">
+    <header class="modal-header">
+      <input id="painter-name" type="text" placeholder="stone.png" spellcheck="false">
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="painter-import">📥 PNG</button>
+        <button class="btn btn-ghost" id="painter-cancel">Отмена</button>
+        <button class="btn btn-primary" id="painter-save">Сохранить</button>
+      </div>
+    </header>
+    <input type="file" id="painter-import-input" accept="image/png" hidden>
+
+    <div class="painter-body">
+      <aside class="tools">
+        <div class="tools-label">Инструмент</div>
+        <div class="tools-col">
+          <button class="tool-btn active" data-tool="pencil" title="Карандаш (B)">✏️</button>
+          <button class="tool-btn" data-tool="eraser" title="Ластик (E)">🧽</button>
+          <button class="tool-btn" data-tool="fill" title="Заливка (G)">🪣</button>
+          <button class="tool-btn" data-tool="picker" title="Пипетка (I)">💧</button>
+          <button class="tool-btn" data-tool="hand" title="Перемещение (H / пробел / СКМ)">✋</button>
+        </div>
+
+        <div class="tools-label">Кисть</div>
+        <div class="brush-row">
+          <input type="range" id="brush-range" min="1" max="16" value="1">
+          <span class="brush-value" id="brush-value">1</span>
+        </div>
+        <div class="tools-hint">🖱 СКМ / пробел / ✋ — двигать<br>🔍 колесо — зум</div>
+
+        <div class="tools-label">Холст</div>
+        <div class="size-list" id="size-list">
+          <button data-w="16"  data-h="16">16</button>
+          <button data-w="32"  data-h="32">32</button>
+          <button data-w="64"  data-h="64">64</button>
+          <button data-w="128" data-h="128">128</button>
+          <button data-w="256" data-h="256">256</button>
+        </div>
+        <div class="custom-size">
+          <input type="number" id="size-w" min="1" max="512" value="16">
+          <span>×</span>
+          <input type="number" id="size-h" min="1" max="512" value="16">
+          <button id="size-apply" title="Применить">↻</button>
+        </div>
+
+        <div class="tools-label">История</div>
+        <div class="hist-row">
+          <button class="tool-btn small" id="btn-undo" title="Отменить (Ctrl+Z)">↶</button>
+          <button class="tool-btn small" id="btn-redo" title="Повторить (Ctrl+Shift+Z)">↷</button>
+        </div>
+        <button class="btn btn-danger small-full" id="btn-clear">Очистить</button>
+      </aside>
+
+      <div class="canvas-area">
+        <div class="canvas-viewport" id="canvas-viewport">
+          <div class="canvas-stage" id="canvas-stage">
+            <div class="checkerboard"></div>
+            <canvas id="paint-canvas"></canvas>
+            <div class="grid-overlay" id="grid-overlay"></div>
+          </div>
+
+          <div class="zoom-controls">
+            <button id="zoom-out" title="Отдалить">−</button>
+            <span class="zoom-display" id="zoom-display">20px</span>
+            <button id="zoom-in" title="Приблизить">+</button>
+            <div class="zoom-divider"></div>
+            <button id="zoom-fit"  title="Вписать в окно">⤢</button>
+            <button id="zoom-reset" title="1:1">1:1</button>
+          </div>
+
+          <div class="canvas-info" id="canvas-info">16 × 16</div>
+        </div>
+      </div>
+
+      <aside class="colors">
+        <div class="tools-label">Цвет</div>
+        <div class="color-current">
+          <input type="color" id="color-input" value="#ffffff">
+          <input type="text" id="color-hex" value="#ffffff" spellcheck="false" maxlength="7">
+        </div>
+
+        <div class="tools-label">Палитра</div>
+        <div class="palette" id="palette"></div>
+
+        <div class="tools-label">Вид</div>
+        <label class="toggle"><input type="checkbox" id="toggle-grid" checked> Сетка</label>
+        <button class="btn btn-ghost small-full" id="btn-center" style="margin-top:8px">🎯 В центр</button>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/texture-editor.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
